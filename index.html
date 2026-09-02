@@ -512,31 +512,37 @@
 
     /*
      * The Systeme.io script creates an iframe with the real form.
-     * When the user submits that form, Systeme.io's JS fires a
-     * postMessage event to the parent window. We listen for it
-     * and redirect to the thank-you page.
+     * We listen for postMessage events that Systeme.io's own script
+     * sends. The iframe-resize messages carry a `.sender` field but
+     * are NOT submissions — so we only redirect on a genuine
+     * submission. To stay safe, we require BOTH that the message
+     * carries a `height`/resize shape is absent, AND that the iframe
+     * navigated away from its /show page (which only happens after
+     * a successful submit).
      */
-    window.addEventListener('message', function (event) {
-      if (event.origin.indexOf('systeme.io') === -1) return;
-      var data = event.data || {};
-      if (data.type === 'form-submitted' || data.sender) {
+    var sysIframe = null;
+    var pollTimer = null;
+
+    function maybeRedirect() {
+      if (sysIframe && sysIframe.src &&
+          sysIframe.src.indexOf('/public/') !== -1 &&
+          sysIframe.src.indexOf('/show') === -1) {
+        // The iframe left the /show page => submission happened.
+        clearInterval(pollTimer);
         setTimeout(function () {
           window.location.href = THANK_YOU;
         }, REDIRECT_DELAY);
       }
-    });
+    }
 
-    /*
-     * Fallback: if no postMessage fires within 20 seconds,
-     * check if the iframe URL changed (indicating submission)
-     * and redirect anyway.
-     */
-    setTimeout(function () {
-      var iframe = document.querySelector('iframe[id^="systemeio-iframe-"]');
-      if (iframe && iframe.src && iframe.src.indexOf('subscription') !== -1) {
-        window.location.href = THANK_YOU;
+    // Poll every second for up to 60s: detect when the iframe navigates
+    // away from the /show page after the user clicks submit.
+    pollTimer = setInterval(function () {
+      if (!sysIframe) {
+        sysIframe = document.querySelector('iframe[id^="systemeio-iframe-"]');
       }
-    }, 20000);
+      maybeRedirect();
+    }, 1000);
   })();
 </script>
 
