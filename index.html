@@ -12,8 +12,8 @@
 <!--
   =====================================================================
   BEFORE YOU PUBLISH — swap these placeholders:
-  1. Line ~40  data-form-id / script src — already your real systeme.io
-     script, leave as-is.
+  1. Search "PASTE YOUR SYSTEME.IO INLINE SCRIPT TAG HERE" — paste
+     your raw <script> tag from the Systeme.io funnel manager.
   2. Search "cover-preview.png" — replace with your rebranded ebook
      cover (once you've stripped the Beaconsfield/myfitnesspal branding
      from the PDF).
@@ -161,37 +161,17 @@
     margin-bottom: 20px;
   }
 
+  /* Hidden bridge container — Systeme.io's script renders inside here */
   #systeme-embed-target {
-    min-height: 64px;
-  }
-  /* Loose styling fallback in case systeme.io's inline form doesn't carry its own styles */
-  #systeme-embed-target input[type="email"],
-  #systeme-embed-target input[type="text"] {
-    width: 100%;
-    padding: 13px 14px;
-    border-radius: 8px;
-    border: 1.5px solid #d8cfbd;
-    font-size: 1rem;
-    margin-bottom: 10px;
-    font-family: inherit;
-  }
-  #systeme-embed-target button,
-  #systeme-embed-target input[type="submit"] {
-    width: 100%;
-    padding: 14px 16px;
-    border-radius: 8px;
-    border: none;
-    background: var(--coral);
-    color: #fff;
-    font-family: 'Space Grotesk', sans-serif;
-    font-weight: 700;
-    font-size: 1rem;
-    cursor: pointer;
-    transition: background 0.15s ease;
-  }
-  #systeme-embed-target button:hover,
-  #systeme-embed-target input[type="submit"]:hover {
-    background: var(--coral-dark);
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    overflow: hidden !important;
+    clip: rect(0, 0, 0, 0) !important;
+    white-space: nowrap !important;
+    border: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
   }
   .hero .form-card {
     max-width: 470px;
@@ -394,28 +374,63 @@
         <h3>Get the free recipe book</h3>
         <p class="sub">Enter your best email and it lands in your inbox instantly.</p>
 
-        <div id="systeme-embed-target">
-          <!-- START OF SYSTEME.IO NATIVE HTML FORM -->
-          <form id="opt-in-form" method="POST" action="https://systeme.io" target="hidden_iframe">
+        <!--
+          ╔═══════════════════════════════════════════════════════════════╗
+          ║  SYSTEME.IO — PASTE YOUR RAW INLINE SCRIPT TAG BELOW  ↓     ║
+          ║                                                             ║
+          ║  1. Open Systeme.io → Funnels → your opt-in funnel.         ║
+          ║  2. Go to "Opt-in page" → edit → find the <script> block.  ║
+          ║  3. Copy the entire <script type="text/javascript"           ║
+          ║     src="https://systeme.io/..."></script> tag.             ║
+          ║  4. Paste it between the comments below.                    ║
+          ║                                                             ║
+          ║  The script MUST be present in the DOM so it can set        ║
+          ║  session tokens, CSRF fields, and anti-bot cookies.         ║
+          ╚═══════════════════════════════════════════════════════════════╝
+        -->
 
-            <!-- Mandatory background configuration variables -->
-            <input type="hidden" name="formId" value="43848992">
-            <input type="hidden" name="has_honeypot" value="false">
+        <!-- ▼▼▼ SYSTEME.IO INLINE SCRIPT (do not edit) ▼▼▼ -->
+        <script id="form-script-tag-25211365" src="https://www.simplynourished.site/public/remote/page/438489925a8079b2e8147bf60dc89629adf312a5.js"></script>
+        <!-- ▲▲▲ END SYSTEME.IO SCRIPT ▲▲▲ -->
 
-            <!-- Email entry (name="email" is required by systeme.io) -->
-            <div class="f-row" style="margin-bottom: 15px;">
-              <label for="sieo-email" style="display: block; font-weight: bold; margin-bottom: 5px; font-size: 14px; text-align: left;">Email Address</label>
-              <input id="sieo-email" type="email" name="email" placeholder="Enter your best email..." required>
-            </div>
 
-            <!-- Submit Button -->
-            <div class="f-row">
-              <button type="submit">Subscribe & Download Ebook</button>
-            </div>
+        <!-- BRIDGE: Hidden container — Systeme.io's script generates
+             the real form with tokens inside this div. -->
+        <div id="systeme-embed-target" aria-hidden="true"
+             style="position:absolute !important;width:1px !important;height:1px !important;
+                    overflow:hidden !important;clip:rect(0,0,0,0) !important;
+                    white-space:nowrap !important;border:0 !important;padding:0 !important;
+                    margin:0 !important;"></div>
 
-          </form>
-          <!-- END OF SYSTEME.IO NATIVE HTML FORM -->
-        </div>
+        <!-- VISIBLE: Custom branded form (coral design tokens) -->
+        <form id="custom-opt-in" autocomplete="on" novalidate>
+          <div style="margin-bottom: 15px;">
+            <label for="gfi-email"
+                   style="display:block; font-weight:600; margin-bottom:5px;
+                          font-size:14px; text-align:left; color:var(--ink);">
+              Email Address
+            </label>
+            <input id="gfi-email" type="email" name="email"
+                   placeholder="Enter your best email..." required
+                   style="width:100%; padding:13px 14px; border-radius:8px;
+                          border:1.5px solid #d8cfbd; font-size:1rem;
+                          font-family:inherit; background:var(--paper);
+                          color:var(--ink); outline:none;
+                          transition:border-color .15s ease;"
+                   onfocus="this.style.borderColor='var(--coral)'"
+                   onblur="this.style.borderColor='#d8cfbd'">
+          </div>
+          <button type="submit" id="custom-submit-btn"
+                  style="width:100%; padding:14px 16px; border-radius:8px;
+                         border:none; background:var(--coral); color:#fff;
+                         font-family:'Space Grotesk',sans-serif; font-weight:700;
+                         font-size:1rem; cursor:pointer;
+                         transition:background .15s ease;"
+                  onmouseover="if(!this.disabled)this.style.background='var(--coral-dark)'"
+                  onmouseout="if(!this.disabled)this.style.background='var(--coral)'">
+            Subscribe & Download Ebook
+          </button>
+        </form>
 
         <div class="trust-line">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
@@ -514,36 +529,72 @@
   (function () {
     var THANK_YOU = 'https://simplynourished.site';
 
-    // Invisible iframe that receives the systeme.io POST response.
-    // Because the form uses target="hidden_iframe", the submission is
-    // forwarded server-side by the browser — no fetch()/XHR is made,
-    // so GitHub Pages never hits a CORS/404 on a relative route.
-    var iframe = document.createElement('iframe');
-    iframe.id = 'hidden_iframe';
-    iframe.name = 'hidden_iframe';
-    iframe.style.display = 'none';
-    document.body.appendChild(iframe);
+    var customForm  = document.getElementById('custom-opt-in');
+    var customInput = document.getElementById('gfi-email');
+    var customBtn   = document.getElementById('custom-submit-btn');
+    if (!customForm || !customInput || !customBtn) return;
 
-    var form = document.getElementById('opt-in-form');
-    if (!form) return;
+    /*
+     * BRIDGE PATTERN — how it works:
+     *
+     * 1. The Systeme.io inline <script> (pasted above) has already loaded
+     *    and rendered its native form inside #systeme-embed-target.
+     *    That form carries real session tokens, CSRF fields, and cookies.
+     *
+     * 2. When the user fills in our visible #gfi-email and clicks submit,
+     *    we programmatically copy that value into the hidden native
+     *    input[name="email"] that Systeme.io owns.
+     *
+     * 3. We then call .submit() on the native Systeme.io form — NOT our
+     *    custom form. This fires the POST with all the server-side tokens
+     *    intact, exactly as if the user had typed directly into the
+     *    Systeme.io widget.
+     *
+     * 4. After a short delay (to allow the XHR to fire), we redirect to
+     *    the thank-you page. Systeme.io's script handles the actual DB
+     *    write and automation triggers asynchronously.
+     */
 
-    var submitBtn = form.querySelector('button[type="submit"]');
     var submitted = false;
 
-    // Redirect once the iframe has finished loading the POST response.
-    iframe.onload = function () {
-      if (submitted) {
-        window.location.href = THANK_YOU;
-      }
-    };
+    customForm.addEventListener('submit', function (e) {
+      e.preventDefault();
 
-    // On submit: disable the button and show a "Sending..." state.
-    form.addEventListener('submit', function () {
+      if (submitted) return;
       submitted = true;
-      if (submitBtn) {
-        submitBtn.disabled = true;
-        submitBtn.textContent = 'Sending...';
+
+      /* ---------- UI feedback ---------- */
+      customBtn.disabled  = true;
+      customBtn.textContent = 'Sending…';
+      customBtn.style.opacity = '0.7';
+      customBtn.style.cursor = 'wait';
+      customInput.readOnly = true;
+
+      /* ---------- Bridge injection ---------- */
+      var nativeForm = document.querySelector('#systeme-embed-target form');
+      if (!nativeForm) {
+        /* Systeme.io script may not have rendered yet — fall back to
+           targeting any form whose action hits systeme.io */
+        nativeForm = document.querySelector('form[action*="systeme.io"]');
       }
+
+      if (nativeForm) {
+        var nativeEmail = nativeForm.querySelector('input[name="email"]');
+        if (nativeEmail) {
+          nativeEmail.value = customInput.value.trim();
+        }
+        nativeForm.submit();
+      }
+
+      /*
+       * Redirect after the POST fires.
+       * Systeme.io processes the submission via its own XHR handler.
+       * The redirect gives the user immediate feedback; the backend
+       * write happens independently inside Systeme.io's pipeline.
+       */
+      setTimeout(function () {
+        window.location.href = THANK_YOU;
+      }, 800);
     });
   })();
 </script>
