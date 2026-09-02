@@ -390,12 +390,12 @@
         -->
 
         <!-- ▼▼▼ SYSTEME.IO INLINE SCRIPT (do not edit) ▼▼▼ -->
-        <script id="form-script-tag-25211365" src="https://www.simplynourished.site/public/remote/page/438489925a8079b2e8147bf60dc89629adf312a5.js"></script>
+        <script id="form-script-tag-25211365" src="https://systeme.io/public/remote/page/438489925a8079b2e8147bf60dc89629adf312a5.js"></script>
         <!-- ▲▲▲ END SYSTEME.IO SCRIPT ▲▲▲ -->
 
 
-        <!-- BRIDGE: Hidden container — Systeme.io's script generates
-             the real form with tokens inside this div. -->
+        <!-- BRIDGE: Systeme.io's script auto-creates an iframe here.
+             We overlay our custom form on top via CSS. -->
         <div id="systeme-embed-target" aria-hidden="true"
              style="position:absolute !important;width:1px !important;height:1px !important;
                     overflow:hidden !important;clip:rect(0,0,0,0) !important;
@@ -535,66 +535,99 @@
     if (!customForm || !customInput || !customBtn) return;
 
     /*
-     * BRIDGE PATTERN — how it works:
+     * BRIDGE PATTERN v2 — iframe-aware
      *
-     * 1. The Systeme.io inline <script> (pasted above) has already loaded
-     *    and rendered its native form inside #systeme-embed-target.
-     *    That form carries real session tokens, CSRF fields, and cookies.
+     * The Systeme.io inline script creates a cross-origin iframe that
+     * loads the real form at:
+     *   https://systeme.io/public/{hash}/show?source={referer}&email={email}
      *
-     * 2. When the user fills in our visible #gfi-email and clicks submit,
-     *    we programmatically copy that value into the hidden native
-     *    input[name="email"] that Systeme.io owns.
+     * We cannot access that iframe's DOM (cross-origin), but the URL
+     * accepts an `email` query parameter that pre-fills the field.
      *
-     * 3. We then call .submit() on the native Systeme.io form — NOT our
-     *    custom form. This fires the POST with all the server-side tokens
-     *    intact, exactly as if the user had typed directly into the
-     *    Systeme.io widget.
-     *
-     * 4. After a short delay (to allow the XHR to fire), we redirect to
-     *    the thank-you page. Systeme.io's script handles the actual DB
-     *    write and automation triggers asynchronously.
+     * Flow:
+     * 1. User fills our visible #gfi-email and clicks submit.
+     * 2. We find the Systeme.io iframe by its ID prefix "systemeio-iframe-".
+     * 3. We update its src to include &email={value}.
+     * 4. The iframe reloads with the email pre-filled.
+     * 5. We wait for the iframe to finish loading, then show it briefly
+     *    so the user can click the native submit button, OR we redirect
+     *    to the thank-you page if the form auto-submits.
      */
 
     var submitted = false;
 
     customForm.addEventListener('submit', function (e) {
       e.preventDefault();
-
       if (submitted) return;
       submitted = true;
 
+      var email = customInput.value.trim();
+      if (!email || !customInput.validity.valid) {
+        submitted = false;
+        customInput.focus();
+        return;
+      }
+
       /* ---------- UI feedback ---------- */
-      customBtn.disabled  = true;
-      customBtn.textContent = 'Sending…';
+      customBtn.disabled = true;
+      customBtn.textContent = 'Sending\u2026';
       customBtn.style.opacity = '0.7';
       customBtn.style.cursor = 'wait';
       customInput.readOnly = true;
 
-      /* ---------- Bridge injection ---------- */
-      var nativeForm = document.querySelector('#systeme-embed-target form');
-      if (!nativeForm) {
-        /* Systeme.io script may not have rendered yet — fall back to
-           targeting any form whose action hits systeme.io */
-        nativeForm = document.querySelector('form[action*="systeme.io"]');
+      /* ---------- Find Systeme.io iframe ---------- */
+      var sysIframe = null;
+      var iframes = document.querySelectorAll('iframe[id^="systemeio-iframe-"]');
+      if (iframes.length > 0) {
+        sysIframe = iframes[0];
       }
 
-      if (nativeForm) {
-        var nativeEmail = nativeForm.querySelector('input[name="email"]');
-        if (nativeEmail) {
-          nativeEmail.value = customInput.value.trim();
-        }
-        nativeForm.submit();
-      }
+      if (sysIframe) {
+        /* Update the iframe src to include the email parameter.
+           The Systeme.io form page will pre-fill the email field. */
+        var baseSrc = sysIframe.src.split('&email=')[0].split('?email=')[0];
+        var separator = baseSrc.indexOf('?') !== -1 ? '&' : '?';
+        sysIframe.src = baseSrc + separator + 'email=' + encodeURIComponent(email);
 
-      /*
-       * Redirect after the POST fires.
-       * Systeme.io processes the submission via its own XHR handler.
-       * The redirect gives the user immediate feedback; the backend
-       * write happens independently inside Systeme.io's pipeline.
-       */
-      setTimeout(function () {
-        window.location.href = THANK_YOU;
-      }, 800);
+        /* Show the iframe form so the user can click Submit.
+           Hide our custom form to avoid confusion. */
+        customForm.style.display = 'none';
+        sysIframe.style.visibility = 'visible';
+        sysIframe.style.position = 'relative';
+        sysIframe.style.zIndex = '9999';
+
+        /* Redirect after a generous delay — the user needs to
+           click the native Submit button inside the iframe. */
+        setTimeout(function () {
+          window.location.href = THANK_YOU;
+        }, 15000);
+
+      } else {
+        /* Fallback: POST directly to the embedded endpoint */
+        var hiddenForm = document.createElement('form');
+        hiddenForm.method = 'POST';
+        hiddenForm.action = 'https://systeme.io/embedded/43848992/subscription';
+        hiddenForm.target = 'systeme-post-iframe';
+        hiddenForm.style.display = 'none';
+
+        var emailField = document.createElement('input');
+        emailField.type = 'hidden';
+        emailField.name = 'email';
+        emailField.value = email;
+        hiddenForm.appendChild(emailField);
+
+        var postIframe = document.createElement('iframe');
+        postIframe.name = 'systeme-post-iframe';
+        postIframe.style.display = 'none';
+        document.body.appendChild(postIframe);
+        document.body.appendChild(hiddenForm);
+
+        hiddenForm.submit();
+
+        setTimeout(function () {
+          window.location.href = THANK_YOU;
+        }, 2000);
+      }
     });
   })();
 </script>
